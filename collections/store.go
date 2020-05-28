@@ -1,4 +1,4 @@
-package model
+package collections
 
 /*
 Store is for the sellers,

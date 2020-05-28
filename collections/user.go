@@ -1,4 +1,4 @@
-package model
+package collections
 
 // User is model for the customer
 type User struct {
@@ -9,9 +9,9 @@ type User struct {
 	SocialID          string `bson:"social_id" json:"social_id"`
 	Provider          string `bson:"provider" json:"provider"`
 	Avatar            string `bson:"avatar" json:"avatar"`
-	Role              *bool  `bson:"role,omitempty" json:"role,omitempty"`
-	HaveStore         *bool  `bson:"have_store,omitempty" json:"have_store,omitempty"`
-	IsActivate        *bool  `bson:"is_active,omitempty" json:"is_active,omitempty"`
+	Role              int    `bson:"role" json:"role"`
+	HaveStore         int    `bson:"have_store" json:"have_store"`
+	IsActivate        int    `bson:"is_active" json:"is_active"`
 	VerificationToken string `bson:"verification_token" json:"verification_token"`
-	// Store             Store  // to show that customer can have one store
+	Store             *Store `bson:"store" json:",omitempty"`
 }
