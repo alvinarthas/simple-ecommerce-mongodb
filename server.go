@@ -25,6 +25,10 @@ func main() {
 		apiV1.GET("/register", routes.RegisterUser)
 		apiV1.POST("/login", routes.LoginUser)
 
+		// Verification User and Store Account
+		apiV1.GET("/verify/store/:token", routes.VerifyStoreAccount)
+		apiV1.GET("/verify/user/:token", routes.VerifyUserAccount)
+
 		apiV1.GET("/testfunc", routes.TestFunc)
 	}
 

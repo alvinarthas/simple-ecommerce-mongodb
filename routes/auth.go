@@ -1,14 +1,18 @@
 package routes
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/alvinarthas/simple-ecommerce-mongodb/collections"
 	"github.com/alvinarthas/simple-ecommerce-mongodb/config"
 	"github.com/danilopolani/gocialite/structs"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/mgo.v2/bson"
 )
 
@@ -62,28 +66,104 @@ func RedirectHandler(c *gin.Context) {
 
 // CallbackHandler Handle callback of provider
 func CallbackHandler(c *gin.Context) {
-	// // Retrieve query params for state and code
-	// state := c.Query("state")
-	// code := c.Query("code")
-	// provider := c.Param("provider")
+	// Retrieve query params for state and code
+	state := c.Query("state")
+	code := c.Query("code")
+	provider := c.Param("provider")
 
-	// // Handle callback and check for errors
-	// user, _, err := config.Gocial.Handle(state, code)
-	// if err != nil {
-	// 	c.Writer.Write([]byte("Error: " + err.Error()))
-	// 	return
-	// }
+	// Handle callback and check for errors
+	user, _, err := config.Gocial.Handle(state, code)
+	if err != nil {
+		c.Writer.Write([]byte("Error: " + err.Error()))
+		return
+	}
 
-	// // var newUser = getOrRegisterUser(provider, user)
-	// // var jtwToken = createToken(&newUser)
+	var newUser = getOrRegisterUser(provider, user)
+	var jtwToken = createToken(&newUser)
+
+	c.JSON(200, gin.H{
+		"data":    newUser,
+		"token":   jtwToken,
+		"message": "berhasil login",
+	})
 }
 
 // RegisterUser to store the new customer data into DB
 func RegisterUser(c *gin.Context) {
+	// Check Password confirmation
+	password := c.PostForm("password")
+	confirmedPassword := c.PostForm("confirmed_password")
+	token, _ := RandomToken()
+
+	// Return Error if not confirmed
+	if password != confirmedPassword {
+		c.JSON(500, gin.H{
+			"status":  "error",
+			"message": "password not confirmed"})
+		c.Abort()
+		return
+	}
+
+	// Hash the password
+	hash, _ := HashPassword(password)
+
+	// Get Form
+	newUser := collections.User{
+		UserName:          c.PostForm("user_name"),
+		FullName:          c.PostForm("full_name"),
+		Email:             c.PostForm("email"),
+		Password:          hash,
+		VerificationToken: token,
+	}
+
+	collection := config.DB.Collection("users")
+
+	_, err := collection.InsertOne(config.CTX, newUser)
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"status":  "error",
+			"message": err})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"status": "successfuly register user, please check your email",
+		"data":   newUser,
+	})
 }
 
 // LoginUser to get the token for access the system
 func LoginUser(c *gin.Context) {
+	// Get Login Form
+	email := c.PostForm("email")
+	password := c.PostForm("password")
+
+	var userData collections.User
+	collection := config.DB.Collection("users")
+
+	filter := bson.M{
+		"email":       email,
+		"is_activate": 1,
+	}
+
+	err = collection.FindOne(config.CTX, filter).Decode(&userData)
+
+	if err == nil && CheckPasswordHash(password, userData.Password) {
+		token := createToken(&userData)
+
+		c.JSON(200, gin.H{
+			"status": "success",
+			"data":   userData,
+			"token":  token,
+		})
+	} else {
+		c.JSON(500, gin.H{
+			"status":  "error",
+			"message": "your email/password may be wrong",
+		})
+	}
 }
 
 // getOrRegisterUser new social ID to database
@@ -99,10 +179,11 @@ func getOrRegisterUser(provider string, user *structs.User) collections.User {
 
 	err = collection.FindOne(config.CTX, filter).Decode(&userData)
 
-	if err == nil {
+	if err != nil {
 		token, _ := RandomToken()
 
 		newUser := collections.User{
+			ID:                primitive.NewObjectID(),
 			FullName:          user.FullName,
 			UserName:          user.Username,
 			Email:             user.Email,
@@ -125,33 +206,42 @@ func getOrRegisterUser(provider string, user *structs.User) collections.User {
 }
 
 // CreateToken to generate token for accesing the system
-// func createToken(user *collections.User) string {
-// var store collections.Store
-// var storeID primitive.ObjectID
+func createToken(user *collections.User) string {
+	// to send time expire, issue at (iat)
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"user_id":    user.ID,
+		"user_role":  user.Role,
+		"user_store": user.HaveStore,
+		"store_id":   user.Store.ID,
+		"exp":        time.Now().AddDate(0, 0, 7).Unix(),
+		"iat":        time.Now().Unix(),
+	})
 
-// if user.HaveStore == 1 {
-// 	err = collection.FindOne(config.CTX, bson.M{}).Decode(&userData)
-// 	// if config.DB.First(&store, "user_id = ?", user.ID).RecordNotFound() {
-// 	// 	storeID = 0
-// 	// }
-// 	// storeID = store.ID
-// }
-// // to send time expire, issue at (iat)
-// jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-// 	"user_id":    user.ID,
-// 	"user_role":  user.Role,
-// 	"user_store": user.HaveStore,
-// 	"store_id":   storeID,
-// 	"exp":        time.Now().AddDate(0, 0, 7).Unix(),
-// 	"iat":        time.Now().Unix(),
-// })
+	// Sign and get the complete encoded token as a string using the secret
+	tokenString, err := jwtToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
 
-// // Sign and get the complete encoded token as a string using the secret
-// tokenString, err := jwtToken.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	if err != nil {
+		fmt.Println(err)
+	}
 
-// if err != nil {
-// 	fmt.Println(err)
-// }
+	return tokenString
+}
 
-// return tokenString
-// }
+// VerifyUserAccount to verify user and store account
+func VerifyUserAccount(c *gin.Context) {
+	// var userData collections.User
+	// collection := config.DB.Collection("users")
+
+	// verificationToken := c.Param("token")
+
+	// err = collection.FindOne(config.CTX, bson.M{"verification_token": verificationToken}).Decode(&userData)
+
+	// if err != nil {
+
+	// }
+}
+
+// VerifyStoreAccount to verify user and store account
+func VerifyStoreAccount(c *gin.Context) {
+
+}

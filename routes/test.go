@@ -6,13 +6,14 @@ import (
 
 	"github.com/alvinarthas/simple-ecommerce-mongodb/collections"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gopkg.in/mgo.v2/bson"
 
 	"github.com/alvinarthas/simple-ecommerce-mongodb/config"
 	"github.com/gin-gonic/gin"
 )
 
-// TestFunc only for testing
-func TestFunc(c *gin.Context) {
+// T1estFunc only for testing
+func T1estFunc(c *gin.Context) {
 	var err error
 	// INSERT
 
@@ -100,4 +101,27 @@ func TestFunc(c *gin.Context) {
 		"status": "successfuly register user, please check your email",
 		"data":   users,
 	})
+}
+
+// TestFunc only for testing
+func TestFunc(c *gin.Context) {
+	// var err error
+
+	collection := config.DB.Collection("users")
+
+	var result collections.User
+	objID, _ := primitive.ObjectIDFromHex("5ed09aadecbc356d40af95c2")
+	err = collection.FindOne(config.CTX, bson.M{"_id": objID}).Decode(&result)
+
+	if result.Store.UserName != "" {
+		c.JSON(200, gin.H{
+			"status": "successfuly register user, please check your email",
+			"data":   result,
+		})
+	} else {
+		c.JSON(200, gin.H{
+			"status": "KOSONG",
+		})
+	}
+
 }
