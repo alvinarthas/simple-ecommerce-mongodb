@@ -109,6 +109,7 @@ func RegisterUser(c *gin.Context) {
 
 	// Get Form
 	newUser := collections.User{
+		ID:                primitive.NewObjectID(),
 		UserName:          c.PostForm("user_name"),
 		FullName:          c.PostForm("full_name"),
 		Email:             c.PostForm("email"),
@@ -144,8 +145,8 @@ func LoginUser(c *gin.Context) {
 	collection := config.DB.Collection("users")
 
 	filter := bson.M{
-		"email":       email,
-		"is_activate": 1,
+		"email":     email,
+		"is_active": 1,
 	}
 
 	err = collection.FindOne(config.CTX, filter).Decode(&userData)

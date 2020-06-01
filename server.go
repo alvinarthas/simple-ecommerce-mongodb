@@ -22,7 +22,7 @@ func main() {
 		apiV1.GET("/auth/:provider/callback", routes.CallbackHandler)
 
 		// Normal Register and Login
-		apiV1.GET("/register", routes.RegisterUser)
+		apiV1.POST("/register", routes.RegisterUser)
 		apiV1.POST("/login", routes.LoginUser)
 
 		// Verification User and Store Account
