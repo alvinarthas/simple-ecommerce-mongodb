@@ -2,7 +2,6 @@ package routes
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/alvinarthas/simple-ecommerce-mongodb/collections"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,57 +11,57 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// T1estFunc only for testing
-func T1estFunc(c *gin.Context) {
+// TestFunc only for testing
+func TestFunc(c *gin.Context) {
 	var err error
 	// INSERT
 
-	store := collections.Store{
-		ID:       primitive.NewObjectID(),
-		Name:     "Toko Bagus",
-		UserName: "bagus_toko",
-		Adress:   "Cipa Cipa",
-		Email:    "tokok@bagus.com",
-		Phone:    "password",
-		Avatar:   "https://avatars3.githubusercontent.com/u/28726294?v=4",
-	}
+	// store := collections.Store{
+	// 	ID:       primitive.NewObjectID(),
+	// 	Name:     "Toko Bagus",
+	// 	UserName: "bagus_toko",
+	// 	Adress:   "Cipa Cipa",
+	// 	Email:    "tokok@bagus.com",
+	// 	Phone:    "password",
+	// 	Avatar:   "https://avatars3.githubusercontent.com/u/28726294?v=4",
+	// }
 
-	users := collections.User{
-		ID:       primitive.NewObjectID(),
-		UserName: "cipa_)ipa",
-		FullName: "Cipa Cipa",
-		Email:    "cipa@alvin.com",
-		Password: "password",
-		SocialID: "2872629224",
-		Provider: "github",
-		Avatar:   "https://avatars3.githubusercontent.com/u/28726294?v=4",
-		Store:    store,
-	}
+	// users := collections.User{
+	// 	ID:       primitive.NewObjectID(),
+	// 	UserName: "cipa_)ipa",
+	// 	FullName: "Cipa Cipa",
+	// 	Email:    "cipa@alvin.com",
+	// 	Password: "password",
+	// 	SocialID: "2872629224",
+	// 	Provider: "github",
+	// 	Avatar:   "https://avatars3.githubusercontent.com/u/28726294?v=4",
+	// 	Store:    store,
+	// }
 
 	collection := config.DB.Collection("users")
 
-	// // // INSERT
-	insertResult, err := collection.InsertOne(config.CTX, users)
-	if err != nil {
-		log.Fatal(err)
-	}
+	// // // // INSERT
+	// insertResult, err := collection.InsertOne(config.CTX, users)
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
 
-	fmt.Println("Inserted a single document: ", insertResult.InsertedID)
+	// fmt.Println("Inserted a single document: ", insertResult.InsertedID)
 
 	// FIND ONE
 
-	// filter := bson.M{
-	// 	"social_id": "28726294",
-	// }
+	filter := bson.M{
+		"store.verification_token": "axax000111222",
+	}
 
-	// var result collections.User
-	// err = collection.FindOne(config.CTX, filter).Decode(&result)
+	var users collections.User
+	err = collection.FindOne(config.CTX, filter).Decode(&users)
 
-	// if err != nil {
-	// 	fmt.Println("Error calling FindOne():", err)
-	// } else {
-	// 	fmt.Println("FindOne() result:", result)
-	// }
+	if err != nil {
+		fmt.Println("Error calling FindOne():", err)
+	} else {
+		fmt.Println("FindOne() result:", users)
+	}
 
 	// // Pass these options to the Find method
 	// findOptions := options.Find()
@@ -103,8 +102,8 @@ func T1estFunc(c *gin.Context) {
 	})
 }
 
-// TestFunc only for testing
-func TestFunc(c *gin.Context) {
+// Te1stFunc only for testing
+func Te1stFunc(c *gin.Context) {
 	// var err error
 
 	collection := config.DB.Collection("users")

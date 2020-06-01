@@ -12,8 +12,8 @@ import (
 	"github.com/danilopolani/gocialite/structs"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"gopkg.in/mgo.v2/bson"
 )
 
 var err error
@@ -159,7 +159,7 @@ func LoginUser(c *gin.Context) {
 			"token":  token,
 		})
 	} else {
-		c.JSON(500, gin.H{
+		c.JSON(404, gin.H{
 			"status":  "error",
 			"message": "your email/password may be wrong",
 		})
@@ -229,19 +229,87 @@ func createToken(user *collections.User) string {
 
 // VerifyUserAccount to verify user and store account
 func VerifyUserAccount(c *gin.Context) {
-	// var userData collections.User
-	// collection := config.DB.Collection("users")
+	var userData collections.User
+	collection := config.DB.Collection("users")
 
-	// verificationToken := c.Param("token")
+	verificationToken := c.Param("token")
 
-	// err = collection.FindOne(config.CTX, bson.M{"verification_token": verificationToken}).Decode(&userData)
+	err = collection.FindOne(config.CTX, bson.M{"verification_token": verificationToken}).Decode(&userData)
 
-	// if err != nil {
+	if err != nil {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "verification token mismatch"})
+		c.Abort()
+		return
+	}
 
-	// }
+	selector := bson.M{"_id": userData.ID}
+	updateStatement := bson.M{"$set": bson.M{"is_active": 1}}
+
+	result, err := collection.UpdateOne(
+		config.CTX,
+		selector,
+		updateStatement,
+	)
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"status":  "error",
+			"message": "verifiaction user error"})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"status":  "success",
+		"data":    result.ModifiedCount,
+		"message": "User Successfully Verify",
+	})
 }
 
 // VerifyStoreAccount to verify user and store account
 func VerifyStoreAccount(c *gin.Context) {
 
+	var userData collections.User
+	collection := config.DB.Collection("users")
+
+	verificationToken := c.Param("token")
+
+	err = collection.FindOne(config.CTX, bson.M{"store.verification_token": verificationToken}).Decode(&userData)
+
+	if err != nil {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "verification token mismatch"})
+		c.Abort()
+		return
+	}
+
+	selector := bson.M{"_id": userData.ID}
+	updateStatement := bson.M{"$set": bson.M{
+		"is_active":       1,
+		"have_store":      1,
+		"store.is_active": 1,
+	}}
+
+	result, err := collection.UpdateOne(
+		config.CTX,
+		selector,
+		updateStatement,
+	)
+
+	if err != nil {
+		c.JSON(500, gin.H{
+			"status":  "error",
+			"message": "verifiaction user error"})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"status":  "success",
+		"data":    result.ModifiedCount,
+		"message": "User Successfully Verify",
+	})
 }
