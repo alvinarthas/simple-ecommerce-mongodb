@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/alvinarthas/simple-ecommerce-mongodb/config"
 	"github.com/alvinarthas/simple-ecommerce-mongodb/routes"
+	"github.com/alvinarthas/simple-ecommerce-sql/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/subosito/gotenv"
 )
@@ -28,6 +29,14 @@ func main() {
 		// Verification User and Store Account
 		apiV1.GET("/verify/store/:token", routes.VerifyStoreAccount)
 		apiV1.GET("/verify/user/:token", routes.VerifyUserAccount)
+
+		// Store
+		store := apiV1.Group("/store")
+		{
+			store.POST("/register", middleware.IsAuth(), routes.RegisterStore)
+			store.GET("/:username", routes.GetStore)                               //show all store products
+			store.GET("/:username/info", middleware.HaveStore(), routes.InfoStore) // Account Info
+		}
 
 		apiV1.GET("/testfunc", routes.TestFunc)
 	}
