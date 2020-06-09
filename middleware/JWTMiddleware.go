@@ -45,20 +45,21 @@ func checkJWT(middlewareAdmin bool, checkStore bool) gin.HandlerFunc {
 			})
 
 			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+				userRole := claims["user_role"]
+				userStore := claims["user_store"]
 
-				userRole := bool(claims["user_role"].(bool))
-				userStore := bool(claims["user_store"].(bool))
+				fmt.Println(claims)
 				c.Set("jwt_user_id", claims["user_id"])
 				c.Set("jwt_user_store", claims["user_store"])
 				c.Set("jwt_store_id", claims["store_id"])
 
-				if middlewareAdmin == true && userRole == false {
+				if middlewareAdmin == true && userRole == 0 {
 					c.JSON(403, gin.H{
 						"status":  "Forbidden",
 						"message": "Only Admin Allowed"})
 					c.Abort()
 					return
-				} else if checkStore == true && userStore == false {
+				} else if checkStore == true && userStore == 0 {
 					c.JSON(403, gin.H{
 						"status":  "Forbidden",
 						"message": "Only Store User Allowed"})

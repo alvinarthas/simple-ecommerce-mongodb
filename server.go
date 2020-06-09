@@ -2,8 +2,8 @@ package main
 
 import (
 	"github.com/alvinarthas/simple-ecommerce-mongodb/config"
+	"github.com/alvinarthas/simple-ecommerce-mongodb/middleware"
 	"github.com/alvinarthas/simple-ecommerce-mongodb/routes"
-	"github.com/alvinarthas/simple-ecommerce-sql/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/subosito/gotenv"
 )
