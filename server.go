@@ -38,6 +38,16 @@ func main() {
 			store.GET("/:username/info", middleware.HaveStore(), routes.InfoStore) // Account Info
 		}
 
+		// Product CRUD by Store
+		product := apiV1.Group("/product")
+		{
+			product.GET("/", routes.GetAllProducts) // every product in every store
+			product.GET("/:slug", routes.GetProduct)
+			product.POST("/create", middleware.HaveStore(), routes.CreateProduct)
+			product.PUT("/update/:slug", middleware.HaveStore(), routes.UpdateProduct)
+			product.DELETE("/delete/:slug", middleware.HaveStore(), routes.DeleteProduct)
+		}
+
 		apiV1.GET("/testfunc", routes.TestFunc)
 	}
 

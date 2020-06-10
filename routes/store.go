@@ -61,6 +61,21 @@ func RegisterStore(c *gin.Context) {
 
 // GetStore to gett all products that the store have
 func GetStore(c *gin.Context) {
+	// // Get Store ID from Authorization token
+	// storeUsername := c.Param("username")
+
+	// // Set Query Params for Filtering & Sorting
+	// queryCategory := c.Query("category")
+	// querySort := c.Query("sort")
+	// queryPriceMin := c.Query("pricemin")
+	// queryPriceMax := c.Query("pricemax")
+	// queryCondition := c.Query("condition")
+
+	// // Initialization
+	// collection := config.DB.Collection("users")
+
+	// // Dynamic query
+	// filter := bson.M{}
 
 }
 
