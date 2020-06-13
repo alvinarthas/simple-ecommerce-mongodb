@@ -13,9 +13,9 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// GetAllProducts to
-func GetAllProducts(c *gin.Context) {
-	collection := config.DB.Collection("products")
+// GetAllCategories is to get all category -> Admin Only
+func GetAllCategories(c *gin.Context) {
+	collection := config.DB.Collection("categories")
 	result, err := collection.Find(config.CTX, bson.D{})
 
 	if err != nil {
@@ -29,13 +29,14 @@ func GetAllProducts(c *gin.Context) {
 	// Return JSON
 	c.JSON(200, gin.H{
 		"status":  "success",
-		"message": "Berhasil menampilkan semua data product",
+		"message": "Berhasil menampilkan semua data kategori",
 		"data":    result,
 	})
 }
 
-// GetProduct to
-func GetProduct(c *gin.Context) {
+// GetCategoryProduct tp get products of the category
+func GetCategoryProduct(c *gin.Context) {
+
 	// Initialization
 	collection := config.DB.Collection("products")
 	var product collections.Product
@@ -44,7 +45,7 @@ func GetProduct(c *gin.Context) {
 	slug := c.Param("slug")
 
 	filter := bson.M{
-		"slug": slug,
+		"category": slug,
 	}
 
 	err = collection.FindOne(config.CTX, filter).Decode(&product)
@@ -61,12 +62,42 @@ func GetProduct(c *gin.Context) {
 		"status": "success",
 		"data":   product,
 	})
+
 }
 
-// CreateProduct to
-func CreateProduct(c *gin.Context) {
+// GetCategory is to get spesific product -> Store
+func GetCategory(c *gin.Context) {
 	// Initialization
-	collection := config.DB.Collection("products")
+	collection := config.DB.Collection("categories")
+	var category collections.Category
+
+	// Get Parameter
+	slug := c.Param("slug")
+
+	filter := bson.M{
+		"slug": slug,
+	}
+
+	err = collection.FindOne(config.CTX, filter).Decode(&category)
+
+	if err != nil {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "record not found"})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"status": "success",
+		"data":   category,
+	})
+}
+
+// CreateCategory is to create new category
+func CreateCategory(c *gin.Context) {
+	// Initialization
+	collection := config.DB.Collection("categories")
 	// Get Parameter
 	slug := slug.Make(c.PostForm("name"))
 
@@ -81,23 +112,13 @@ func CreateProduct(c *gin.Context) {
 		slug = slug + "-" + strconv.FormatInt(time.Now().Unix(), 10)
 	}
 
-	// set Parameter POST
-	price, _ := strconv.Atoi(c.PostForm("price"))
-	stock, _ := strconv.Atoi(c.PostForm("stock"))
-	weight, _ := strconv.Atoi(c.PostForm("weight"))
-	condition, _ := strconv.Atoi(c.PostForm("condition"))
-
 	// Get Store Data
-	item := collections.Product{
-		ID:           primitive.NewObjectID(),
-		Name:         c.PostForm("name"),
-		Slug:         slug,
-		Description:  c.PostForm("description"),
-		Price:        price,
-		Condition:    condition,
-		InitialStock: stock,
-		Weight:       weight,
-		Category:     c.PostForm("category"),
+	item := collections.Category{
+		ID:          primitive.NewObjectID(),
+		Name:        c.PostForm("name"),
+		Slug:        slug,
+		Description: c.PostForm("description"),
+		Icon:        c.PostForm("icon"),
 	}
 
 	_, err = collection.InsertOne(config.CTX, item)
@@ -112,17 +133,16 @@ func CreateProduct(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"status":  "success",
-		"message": "Store Product Successful",
+		"message": "Store Category Successful",
 		"data":    item,
 	})
-
 }
 
-// UpdateProduct to
-func UpdateProduct(c *gin.Context) {
+// UpdateCategory is to update existing product -> Store
+func UpdateCategory(c *gin.Context) {
 	// Initialization
-	collection := config.DB.Collection("products")
-	var product collections.Product
+	collection := config.DB.Collection("categories")
+	var category collections.Category
 
 	// Get Parameter
 	slug := c.Param("slug")
@@ -131,7 +151,7 @@ func UpdateProduct(c *gin.Context) {
 		"slug": slug,
 	}
 
-	err = collection.FindOne(config.CTX, filter).Decode(&product)
+	err = collection.FindOne(config.CTX, filter).Decode(&category)
 
 	if err != nil {
 		c.JSON(404, gin.H{
@@ -141,23 +161,7 @@ func UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	// To make sure, it is the right store account who do the update
-	storeID, _ := primitive.ObjectIDFromHex(c.MustGet("jwt_store_id").(string))
-	if storeID != product.ID {
-		c.JSON(403, gin.H{
-			"status":  "error",
-			"message": "this data is forbidden"})
-		c.Abort()
-		return
-	}
-
-	// Get Form for updating the product
-	price, _ := strconv.Atoi(c.PostForm("price"))
-	stock, _ := strconv.Atoi(c.PostForm("stock"))
-	weight, _ := strconv.Atoi(c.PostForm("weight"))
-	condition, _ := strconv.Atoi(c.PostForm("condition"))
-
-	if c.PostForm("name") != product.Name {
+	if c.PostForm("name") != category.Name {
 		// Check Slug
 		filterCheck := bson.M{
 			"slug": slug,
@@ -170,16 +174,12 @@ func UpdateProduct(c *gin.Context) {
 		}
 	}
 
-	selector := bson.M{"_id": product.ID}
+	selector := bson.M{"_id": category.ID}
 	updateStatement := bson.M{"$set": bson.M{
-		"name":         c.PostForm("name"),
-		"description":  c.PostForm("description"),
-		"slug":         slug,
-		"price":        price,
-		"condition":    stock,
-		"intial_stock": weight,
-		"weight":       condition,
-		"category":     c.PostForm("category"),
+		"name":        c.PostForm("name"),
+		"description": c.PostForm("description"),
+		"slug":        slug,
+		"icon":        c.PostForm("icon"),
 	}}
 
 	result, err := collection.UpdateOne(
@@ -202,11 +202,11 @@ func UpdateProduct(c *gin.Context) {
 	})
 }
 
-// DeleteProduct to
-func DeleteProduct(c *gin.Context) {
+// DeleteCategory is to delete existing category
+func DeleteCategory(c *gin.Context) {
 	// Initialization
-	collection := config.DB.Collection("products")
-	var product collections.Product
+	collection := config.DB.Collection("categories")
+	var category collections.Category
 
 	// Get Parameter
 	slug := c.Param("slug")
@@ -215,7 +215,7 @@ func DeleteProduct(c *gin.Context) {
 		"slug": slug,
 	}
 
-	err := collection.FindOne(config.CTX, filter).Decode(&product)
+	err := collection.FindOne(config.CTX, filter).Decode(&category)
 
 	if err != nil {
 		c.JSON(404, gin.H{
@@ -225,7 +225,7 @@ func DeleteProduct(c *gin.Context) {
 		return
 	}
 
-	selector := bson.M{"_id": product.ID}
+	selector := bson.M{"_id": category.ID}
 
 	_, err = collection.DeleteOne(context.TODO(), selector)
 
@@ -239,6 +239,6 @@ func DeleteProduct(c *gin.Context) {
 
 	c.JSON(200, gin.H{
 		"status":  "success",
-		"message": "Delete Product Success",
+		"message": "Delete Category Success",
 	})
 }
