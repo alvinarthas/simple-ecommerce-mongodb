@@ -2,6 +2,7 @@ package routes
 
 import (
 	"context"
+	"log"
 	"strconv"
 	"time"
 
@@ -10,27 +11,43 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gosimple/slug"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gopkg.in/mgo.v2/bson"
 )
 
 // GetAllCategories is to get all category -> Admin Only
 func GetAllCategories(c *gin.Context) {
 	collection := config.DB.Collection("categories")
-	result, err := collection.Find(config.CTX, bson.D{})
+
+	findOptions := options.Find()
+	var results []*collections.Category
+
+	cur, err := collection.Find(config.CTX, bson.M{}, findOptions)
 
 	if err != nil {
 		c.JSON(404, gin.H{
 			"status":  "error",
-			"message": "record not found"})
+			"message": err})
 		c.Abort()
 		return
+	}
+
+	for cur.Next(config.CTX) {
+		// create a value into which the single document can be decoded
+		var elem collections.Category
+		err := cur.Decode(&elem)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		results = append(results, &elem)
 	}
 
 	// Return JSON
 	c.JSON(200, gin.H{
 		"status":  "success",
 		"message": "Berhasil menampilkan semua data kategori",
-		"data":    result,
+		"data":    results,
 	})
 }
 
@@ -145,10 +162,10 @@ func UpdateCategory(c *gin.Context) {
 	var category collections.Category
 
 	// Get Parameter
-	slug := c.Param("slug")
+	getSlug := c.Param("slug")
 
 	filter := bson.M{
-		"slug": slug,
+		"slug": getSlug,
 	}
 
 	err = collection.FindOne(config.CTX, filter).Decode(&category)
@@ -162,23 +179,28 @@ func UpdateCategory(c *gin.Context) {
 	}
 
 	if c.PostForm("name") != category.Name {
+		// Make New Slug
+		newSlug := slug.Make(c.PostForm("name"))
 		// Check Slug
 		filterCheck := bson.M{
-			"slug": slug,
+			"slug": newSlug,
 		}
 
-		_, err := collection.Find(config.CTX, filterCheck)
+		slugCount, _ := collection.CountDocuments(config.CTX, filterCheck)
 
-		if err != nil {
-			slug = slug + "-" + strconv.FormatInt(time.Now().Unix(), 10)
+		if slugCount > 0 {
+			getSlug = getSlug + "-" + strconv.FormatInt(time.Now().Unix(), 10)
+		} else {
+			getSlug = newSlug
 		}
+
 	}
 
 	selector := bson.M{"_id": category.ID}
 	updateStatement := bson.M{"$set": bson.M{
 		"name":        c.PostForm("name"),
 		"description": c.PostForm("description"),
-		"slug":        slug,
+		"slug":        getSlug,
 		"icon":        c.PostForm("icon"),
 	}}
 

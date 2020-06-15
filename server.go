@@ -30,18 +30,18 @@ func main() {
 			users.GET("/auth/:provider/callback", routes.CallbackHandler)
 
 			// Verification Users
-			users.GET("/verify/:token", routes.VerifyUserAccount)
+			users.PATCH("/verify/:token", routes.VerifyUserAccount)
 		}
 		// Store
 		stores := apiV1.Group("/stores")
 		{
-			// Registration
-			stores.POST("/register", middleware.IsAuth(), routes.RegisterStore)
 			//show all store products & Account Info
 			stores.GET("/:username", routes.GetStore)
 			stores.GET("/:username/info", middleware.HaveStore(), routes.InfoStore)
+			// Registration
+			stores.POST("/register", middleware.IsAuth(), routes.RegisterStore)
 			// Verification User and Store Account
-			stores.GET("/verify/:token", routes.VerifyStoreAccount)
+			stores.PATCH("/verify/:token", routes.VerifyStoreAccount)
 		}
 
 		// Product CRUD by Store
