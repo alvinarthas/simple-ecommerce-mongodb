@@ -1,4 +1,4 @@
-package routes
+package handlers
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alvinarthas/simple-ecommerce-mongodb/collections"
 	"github.com/alvinarthas/simple-ecommerce-mongodb/config"
+	"github.com/alvinarthas/simple-ecommerce-mongodb/models"
 	"github.com/gin-gonic/gin"
 	"github.com/gosimple/slug"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,7 +20,7 @@ func GetAllCategories(c *gin.Context) {
 	collection := config.DB.Collection("categories")
 
 	findOptions := options.Find()
-	var results []*collections.Category
+	var results []*models.Category
 
 	cur, err := collection.Find(config.CTX, bson.M{}, findOptions)
 
@@ -34,7 +34,7 @@ func GetAllCategories(c *gin.Context) {
 
 	for cur.Next(config.CTX) {
 		// create a value into which the single document can be decoded
-		var elem collections.Category
+		var elem models.Category
 		err := cur.Decode(&elem)
 		if err != nil {
 			log.Fatal(err)
@@ -56,7 +56,7 @@ func GetCategoryProduct(c *gin.Context) {
 
 	// Initialization
 	collection := config.DB.Collection("products")
-	var product collections.Product
+	var product models.Product
 
 	// Get Parameter
 	slug := c.Param("slug")
@@ -86,7 +86,7 @@ func GetCategoryProduct(c *gin.Context) {
 func GetCategory(c *gin.Context) {
 	// Initialization
 	collection := config.DB.Collection("categories")
-	var category collections.Category
+	var category models.Category
 
 	// Get Parameter
 	slug := c.Param("slug")
@@ -130,7 +130,7 @@ func CreateCategory(c *gin.Context) {
 	}
 
 	// Get Store Data
-	item := collections.Category{
+	item := models.Category{
 		ID:          primitive.NewObjectID(),
 		Name:        c.PostForm("name"),
 		Slug:        slug,
@@ -159,7 +159,7 @@ func CreateCategory(c *gin.Context) {
 func UpdateCategory(c *gin.Context) {
 	// Initialization
 	collection := config.DB.Collection("categories")
-	var category collections.Category
+	var category models.Category
 
 	// Get Parameter
 	getSlug := c.Param("slug")
@@ -228,7 +228,7 @@ func UpdateCategory(c *gin.Context) {
 func DeleteCategory(c *gin.Context) {
 	// Initialization
 	collection := config.DB.Collection("categories")
-	var category collections.Category
+	var category models.Category
 
 	// Get Parameter
 	slug := c.Param("slug")

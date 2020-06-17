@@ -1,9 +1,7 @@
-package routes
+package handlers
 
 import (
-	"fmt"
-
-	"github.com/alvinarthas/simple-ecommerce-mongodb/collections"
+	"github.com/alvinarthas/simple-ecommerce-mongodb/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/mgo.v2/bson"
 
@@ -16,7 +14,7 @@ func TestFunc(c *gin.Context) {
 	var err error
 	// INSERT
 
-	// store := collections.Store{
+	// store := models.Store{
 	// 	ID:       primitive.NewObjectID(),
 	// 	Name:     "Toko Bagus",
 	// 	UserName: "bagus_toko",
@@ -26,7 +24,7 @@ func TestFunc(c *gin.Context) {
 	// 	Avatar:   "https://avatars3.githubusercontent.com/u/28726294?v=4",
 	// }
 
-	// users := collections.User{
+	// users := models.User{
 	// 	ID:          primitive.NewObjectID(),
 	// 	UserName:    "cipa_)ipa",
 	// 	FullName:    "Cipa Cipa",
@@ -56,7 +54,7 @@ func TestFunc(c *gin.Context) {
 	// 	"store.verification_token": "axax000111222",
 	// }
 
-	// var users collections.User
+	// var users models.User
 	// err = collection.FindOne(config.CTX, filter).Decode(&users)
 
 	// if err != nil {
@@ -69,7 +67,7 @@ func TestFunc(c *gin.Context) {
 	// findOptions := options.Find()
 
 	// // Here's an array in which you can store the decoded documents
-	// var results []*collections.User
+	// var results []*models.User
 
 	// // Passing bson.D{{}} as the filter matches all documents in the collection
 	// cur, err := collection.Find(config.CTX, filter, findOptions)
@@ -82,7 +80,7 @@ func TestFunc(c *gin.Context) {
 	// for cur.Next(context.TODO()) {
 
 	// 	// create a value into which the single document can be decoded
-	// 	var elem collections.User
+	// 	var elem models.User
 	// 	err := cur.Decode(&elem)
 	// 	if err != nil {
 	// 		log.Fatal(err)
@@ -99,20 +97,23 @@ func TestFunc(c *gin.Context) {
 	// cur.Close(config.CTX)
 	collection := config.DB.Collection("users")
 
-	var users collections.User
-	objID, _ := primitive.ObjectIDFromHex("5ed61179736d571d792d0bed")
+	var users models.User
+	objID, _ := primitive.ObjectIDFromHex("5ed6117736d571d792d0bed")
 	err = collection.FindOne(config.CTX, bson.M{"_id": objID}).Decode(&users)
 
 	if err != nil {
-		fmt.Println("Error calling FindOne():", err)
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": err})
+		c.Abort()
+		return
 	} else {
-		fmt.Println("FindOne() result:", users.LastUpdate)
+		c.JSON(200, gin.H{
+			"status": "successfuly register user, please check your email",
+			"data":   users,
+		})
 	}
 
-	c.JSON(200, gin.H{
-		"status": "successfuly register user, please check your email",
-		"data":   users,
-	})
 }
 
 // Te1stFunc only for testing
@@ -121,7 +122,7 @@ func Te1stFunc(c *gin.Context) {
 
 	collection := config.DB.Collection("users")
 
-	var result collections.User
+	var result models.User
 	objID, _ := primitive.ObjectIDFromHex("5ed09aadecbc356d40af95c2")
 	err = collection.FindOne(config.CTX, bson.M{"_id": objID}).Decode(&result)
 

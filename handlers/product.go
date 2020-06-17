@@ -1,4 +1,4 @@
-package routes
+package handlers
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/alvinarthas/simple-ecommerce-mongodb/collections"
 	"github.com/alvinarthas/simple-ecommerce-mongodb/config"
+	"github.com/alvinarthas/simple-ecommerce-mongodb/models"
 	"github.com/gin-gonic/gin"
 	"github.com/gosimple/slug"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,7 +20,7 @@ func GetAllProducts(c *gin.Context) {
 	collection := config.DB.Collection("products")
 
 	findOptions := options.Find()
-	var results []*collections.Product
+	var results []*models.Product
 
 	cur, err := collection.Find(config.CTX, bson.M{}, findOptions)
 
@@ -34,7 +34,7 @@ func GetAllProducts(c *gin.Context) {
 
 	for cur.Next(config.CTX) {
 		// create a value into which the single document can be decoded
-		var elem collections.Product
+		var elem models.Product
 		err := cur.Decode(&elem)
 		if err != nil {
 			log.Fatal(err)
@@ -55,7 +55,7 @@ func GetAllProducts(c *gin.Context) {
 func GetProduct(c *gin.Context) {
 	// Initialization
 	collection := config.DB.Collection("products")
-	var product collections.Product
+	var product models.Product
 
 	// Get Parameter
 	slug := c.Param("slug")
@@ -105,7 +105,7 @@ func CreateProduct(c *gin.Context) {
 	condition, _ := strconv.Atoi(c.PostForm("condition"))
 
 	// Get Store Data
-	item := collections.Product{
+	item := models.Product{
 		ID:           primitive.NewObjectID(),
 		Name:         c.PostForm("name"),
 		Slug:         slug,
@@ -152,7 +152,7 @@ func CreateProduct(c *gin.Context) {
 func UpdateProduct(c *gin.Context) {
 	// Initialization
 	collection := config.DB.Collection("products")
-	var product collections.Product
+	var product models.Product
 
 	// Get Parameter
 	getSlug := c.Param("slug")
@@ -173,7 +173,6 @@ func UpdateProduct(c *gin.Context) {
 
 	// To make sure, it is the right store account who do the update
 	userCollection := config.DB.Collection("users")
-	var user collections.User
 
 	userID, _ := primitive.ObjectIDFromHex(c.MustGet("jwt_user_id").(string))
 	filterUser := bson.M{
@@ -181,11 +180,12 @@ func UpdateProduct(c *gin.Context) {
 		"store.products": product.ID,
 	}
 
-	err = userCollection.FindOne(config.CTX, filterUser).Decode(&user)
-	if err != nil {
+	productCheck, _ := userCollection.CountDocuments(config.CTX, filterUser)
+
+	if productCheck == 1 {
 		c.JSON(403, gin.H{
 			"status":  "error",
-			"message": err})
+			"message": "This Data is Forbidden"})
 		c.Abort()
 		return
 	}
@@ -249,7 +249,7 @@ func UpdateProduct(c *gin.Context) {
 func DeleteProduct(c *gin.Context) {
 	// Initialization
 	collection := config.DB.Collection("products")
-	var product collections.Product
+	var product models.Product
 
 	// Get Parameter
 	slug := c.Param("slug")

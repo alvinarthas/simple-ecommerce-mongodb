@@ -1,8 +1,7 @@
-package collections
+package models
 
 /*
-Store is for the sellers,
-User can have more than one stores
+User can be the merchant, only available to one store
 */
 
 // Store model

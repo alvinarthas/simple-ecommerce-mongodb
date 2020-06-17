@@ -1,4 +1,4 @@
-package routes
+package handlers
 
 import (
 	"fmt"
@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/alvinarthas/simple-ecommerce-mongodb/collections"
 	"github.com/alvinarthas/simple-ecommerce-mongodb/config"
+	"github.com/alvinarthas/simple-ecommerce-mongodb/models"
 	"github.com/danilopolani/gocialite/structs"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
@@ -74,7 +74,12 @@ func CallbackHandler(c *gin.Context) {
 	// Handle callback and check for errors
 	user, _, err := config.Gocial.Handle(state, code)
 	if err != nil {
-		c.Writer.Write([]byte("Error: " + err.Error()))
+		c.JSON(404, gin.H{
+			"success": false,
+			"message": "error",
+			"errors":  err.Error(),
+		})
+		c.Abort()
 		return
 	}
 
@@ -82,6 +87,7 @@ func CallbackHandler(c *gin.Context) {
 	var jtwToken = createToken(&newUser)
 
 	c.JSON(200, gin.H{
+		"success": true,
 		"data":    newUser,
 		"token":   jtwToken,
 		"message": "berhasil login",
@@ -98,8 +104,9 @@ func RegisterUser(c *gin.Context) {
 	// Return Error if not confirmed
 	if password != confirmedPassword {
 		c.JSON(500, gin.H{
-			"status":  "error",
-			"message": "password not confirmed"})
+			"success": false,
+			"message": "password not confirmed",
+			"errors":  err.Error()})
 		c.Abort()
 		return
 	}
@@ -108,7 +115,7 @@ func RegisterUser(c *gin.Context) {
 	hash, _ := HashPassword(password)
 
 	// Get Form
-	newUser := collections.User{
+	newUser := models.User{
 		ID:                primitive.NewObjectID(),
 		UserName:          c.PostForm("user_name"),
 		FullName:          c.PostForm("full_name"),
@@ -141,7 +148,7 @@ func LoginUser(c *gin.Context) {
 	email := c.PostForm("email")
 	password := c.PostForm("password")
 
-	var userData collections.User
+	var userData models.User
 	collection := config.DB.Collection("users")
 
 	filter := bson.M{
@@ -168,8 +175,8 @@ func LoginUser(c *gin.Context) {
 }
 
 // getOrRegisterUser new social ID to database
-func getOrRegisterUser(provider string, user *structs.User) collections.User {
-	var userData collections.User
+func getOrRegisterUser(provider string, user *structs.User) models.User {
+	var userData models.User
 	collection := config.DB.Collection("users")
 	// Find One user
 
@@ -183,7 +190,7 @@ func getOrRegisterUser(provider string, user *structs.User) collections.User {
 	if err != nil {
 		token, _ := RandomToken()
 
-		newUser := collections.User{
+		newUser := models.User{
 			ID:                primitive.NewObjectID(),
 			FullName:          user.FullName,
 			UserName:          user.Username,
@@ -207,7 +214,7 @@ func getOrRegisterUser(provider string, user *structs.User) collections.User {
 }
 
 // CreateToken to generate token for accesing the system
-func createToken(user *collections.User) string {
+func createToken(user *models.User) string {
 	// to send time expire, issue at (iat)
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":    user.ID,
@@ -229,7 +236,7 @@ func createToken(user *collections.User) string {
 
 // VerifyUserAccount to verify user and store account
 func VerifyUserAccount(c *gin.Context) {
-	var userData collections.User
+	var userData models.User
 	collection := config.DB.Collection("users")
 
 	verificationToken := c.Param("token")
@@ -271,7 +278,7 @@ func VerifyUserAccount(c *gin.Context) {
 // VerifyStoreAccount to verify user and store account
 func VerifyStoreAccount(c *gin.Context) {
 
-	var userData collections.User
+	var userData models.User
 	collection := config.DB.Collection("users")
 
 	verificationToken := c.Param("token")

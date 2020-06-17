@@ -1,8 +1,8 @@
-package routes
+package handlers
 
 import (
-	"github.com/alvinarthas/simple-ecommerce-mongodb/collections"
 	"github.com/alvinarthas/simple-ecommerce-mongodb/config"
+	"github.com/alvinarthas/simple-ecommerce-mongodb/models"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -21,7 +21,7 @@ func RegisterStore(c *gin.Context) {
 	token, _ := RandomToken()
 	collection := config.DB.Collection("users")
 
-	store := collections.Store{
+	store := models.Store{
 		Name:              c.PostForm("name"),
 		UserName:          c.PostForm("user_name"),
 		Adress:            c.PostForm("adress"),
@@ -88,7 +88,7 @@ func InfoStore(c *gin.Context) {
 		"store.user_name": storeUsername,
 	}
 
-	var users collections.User
+	var users models.User
 	err = collection.FindOne(config.CTX, filter).Decode(&users)
 
 	if err != nil {

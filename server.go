@@ -2,13 +2,14 @@ package main
 
 import (
 	"github.com/alvinarthas/simple-ecommerce-mongodb/config"
+	"github.com/alvinarthas/simple-ecommerce-mongodb/handlers"
 	"github.com/alvinarthas/simple-ecommerce-mongodb/middleware"
-	"github.com/alvinarthas/simple-ecommerce-mongodb/routes"
 	"github.com/gin-gonic/gin"
 	"github.com/subosito/gotenv"
 )
 
 func main() {
+	// Start the MongoDB Connection and Load the Environtment Variable
 	config.InitDB()
 	gotenv.Load()
 
@@ -22,52 +23,55 @@ func main() {
 		users := apiV1.Group("/users")
 		{
 			// Normal Register and Login
-			users.POST("/register", routes.RegisterUser)
-			users.POST("/login", routes.LoginUser)
+			users.POST("/register", handlers.RegisterUser)
+			users.POST("/login", handlers.LoginUser)
 
 			// Social Auth or OAuth
-			users.GET("/auth/:provider", routes.RedirectHandler)
-			users.GET("/auth/:provider/callback", routes.CallbackHandler)
+			users.GET("/auth/:provider", handlers.RedirectHandler)
+			users.GET("/auth/:provider/callback", handlers.CallbackHandler)
 
 			// Verification Users
-			users.PATCH("/verify/:token", routes.VerifyUserAccount)
+			users.PATCH("/verify/:token", handlers.VerifyUserAccount)
 		}
 		// Store
 		stores := apiV1.Group("/stores")
 		{
 			//show all store products & Account Info
-			stores.GET("/:username", routes.GetStore)
-			stores.GET("/:username/info", middleware.HaveStore(), routes.InfoStore)
+			stores.GET("/:username", handlers.GetStore)
+			stores.GET("/:username/info", middleware.HaveStore(), handlers.InfoStore)
+
 			// Registration
-			stores.POST("/register", middleware.IsAuth(), routes.RegisterStore)
+			stores.POST("/register", middleware.IsAuth(), handlers.RegisterStore)
+
 			// Verification User and Store Account
-			stores.PATCH("/verify/:token", routes.VerifyStoreAccount)
+			stores.PATCH("/verify/:token", handlers.VerifyStoreAccount)
 		}
 
-		// Product CRUD by Store
+		// Product CRUD
 		products := apiV1.Group("/products")
 		{
-			products.GET("/", routes.GetAllProducts) // every product in every store
-			products.GET("/:slug", routes.GetProduct)
-			products.POST("/", middleware.HaveStore(), routes.CreateProduct)
-			products.PUT("/:slug", middleware.HaveStore(), routes.UpdateProduct)
-			products.DELETE("/:slug", middleware.HaveStore(), routes.DeleteProduct)
+			products.GET("/", handlers.GetAllProducts) // every product in every store
+			products.GET("/:slug", handlers.GetProduct)
+			products.POST("/", middleware.HaveStore(), handlers.CreateProduct)
+			products.PUT("/:slug", middleware.HaveStore(), handlers.UpdateProduct)
+			products.DELETE("/:slug", middleware.HaveStore(), handlers.DeleteProduct)
 		}
 
-		// Category
+		// Category CRUD
 		categories := apiV1.Group("/categories")
 		{
 			// Initilize Http method for Category Crud
-			categories.GET("/", routes.GetAllCategories)
-			categories.GET("/:slug", middleware.IsAdmin(), routes.GetCategory)
-			categories.GET("/:slug/products", routes.GetCategoryProduct)
-			categories.POST("/", middleware.IsAdmin(), routes.CreateCategory)
-			categories.PUT("/:slug", middleware.IsAdmin(), routes.UpdateCategory)
-			categories.DELETE("/:slug", middleware.IsAdmin(), routes.DeleteCategory)
+			categories.GET("/", handlers.GetAllCategories)
+			categories.GET("/:slug", middleware.IsAdmin(), handlers.GetCategory)
+			categories.GET("/:slug/products", handlers.GetCategoryProduct)
+			categories.POST("/", middleware.IsAdmin(), handlers.CreateCategory)
+			categories.PUT("/:slug", middleware.IsAdmin(), handlers.UpdateCategory)
+			categories.DELETE("/:slug", middleware.IsAdmin(), handlers.DeleteCategory)
 		}
 
-		apiV1.GET("/testfunc", routes.TestFunc)
+		apiV1.GET("/testfunc", handlers.TestFunc)
 	}
 
+	// Run The Server
 	router.Run()
 }
