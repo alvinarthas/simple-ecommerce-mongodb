@@ -117,7 +117,20 @@ func CreateProduct(c *gin.Context) {
 		Category:     c.PostForm("category"),
 	}
 
-	_, err = collection.InsertOne(config.CTX, item)
+	insertResult, _ := collection.InsertOne(config.CTX, item)
+
+	// Save product object id to Store
+	userCollection := config.DB.Collection("users")
+
+	userID, _ := primitive.ObjectIDFromHex(c.MustGet("jwt_user_id").(string))
+	selector := bson.M{"_id": userID}
+	updateStatement := bson.M{"$push": bson.M{"store.products": insertResult.InsertedID}}
+
+	_, err = userCollection.UpdateOne(
+		config.CTX,
+		selector,
+		updateStatement,
+	)
 
 	if err != nil {
 		c.JSON(500, gin.H{
@@ -159,11 +172,20 @@ func UpdateProduct(c *gin.Context) {
 	}
 
 	// To make sure, it is the right store account who do the update
-	storeID, _ := primitive.ObjectIDFromHex(c.MustGet("jwt_store_id").(string))
-	if storeID != product.ID {
+	userCollection := config.DB.Collection("users")
+	var user collections.User
+
+	userID, _ := primitive.ObjectIDFromHex(c.MustGet("jwt_user_id").(string))
+	filterUser := bson.M{
+		"_id":            userID,
+		"store.products": product.ID,
+	}
+
+	err = userCollection.FindOne(config.CTX, filterUser).Decode(&user)
+	if err != nil {
 		c.JSON(403, gin.H{
 			"status":  "error",
-			"message": "this data is forbidden"})
+			"message": err})
 		c.Abort()
 		return
 	}
@@ -247,6 +269,19 @@ func DeleteProduct(c *gin.Context) {
 	}
 
 	selector := bson.M{"_id": product.ID}
+
+	// Delete Product from user collection
+	userCollection := config.DB.Collection("users")
+
+	userID, _ := primitive.ObjectIDFromHex(c.MustGet("jwt_user_id").(string))
+	userSelector := bson.M{"_id": userID}
+	updateStatement := bson.M{"$pull": bson.M{"store.products": product.ID}}
+
+	_, err = userCollection.UpdateOne(
+		config.CTX,
+		userSelector,
+		updateStatement,
+	)
 
 	_, err = collection.DeleteOne(context.TODO(), selector)
 

@@ -22,7 +22,6 @@ func RegisterStore(c *gin.Context) {
 	collection := config.DB.Collection("users")
 
 	store := collections.Store{
-		ID:                primitive.NewObjectID(),
 		Name:              c.PostForm("name"),
 		UserName:          c.PostForm("user_name"),
 		Adress:            c.PostForm("adress"),

@@ -213,9 +213,8 @@ func createToken(user *collections.User) string {
 		"user_id":    user.ID,
 		"user_role":  user.Role,
 		"user_store": user.HaveStore,
-		"store_id":   user.Store.ID,
-		"exp":        time.Now().AddDate(0, 0, 7).Unix(),
-		"iat":        time.Now().Unix(),
+		"exp":        time.Now().AddDate(0, 0, 1).Unix(), // expired after one day
+		"iat":        time.Now().Unix(),                  // date created
 	})
 
 	// Sign and get the complete encoded token as a string using the secret
