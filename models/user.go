@@ -16,6 +16,8 @@ type User struct {
 	SocialID          string              `bson:"social_id" json:"-"`
 	Provider          string              `bson:"provider" json:"-"`
 	Avatar            string              `bson:"avatar" json:"avatar"`
+	Phone             string              `bson:"phone" json:"phone"`
+	Sex               string              `bson:"sex" json:"sex"`
 	Role              int                 `bson:"role" json:"role"`
 	HaveStore         int                 `bson:"have_store" json:"have_store"`
 	IsActivate        int                 `bson:"is_active" json:"is_active"`

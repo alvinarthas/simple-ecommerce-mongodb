@@ -29,6 +29,7 @@ func main() {
 			// Social Auth or OAuth
 			users.GET("/auth/:provider", handlers.RedirectHandler)
 			users.GET("/auth/:provider/callback", handlers.CallbackHandler)
+			// users.GET("/notifications", handlers.TestFunc)
 
 			// Verification Users
 			users.PATCH("/verify/:token", handlers.VerifyUserAccount)

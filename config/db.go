@@ -2,10 +2,13 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	elastic "gopkg.in/olivere/elastic.v7"
 )
 
 // DB to set the global variable
@@ -28,4 +31,17 @@ func InitDB() {
 	}
 
 	DB = client.Database("simple_ecommerce")
+}
+
+// GetESClient to get elasticsearch client cluster
+func GetESClient() (*elastic.Client, error) {
+
+	client, err := elastic.NewClient(elastic.SetURL("http://localhost:9200"),
+		elastic.SetSniff(false),
+		elastic.SetHealthcheck(false))
+
+	fmt.Println("ES initialized...")
+
+	return client, err
+
 }

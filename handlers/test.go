@@ -1,6 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/alvinarthas/simple-ecommerce-mongodb/models"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gopkg.in/mgo.v2/bson"
@@ -9,8 +12,14 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// TestFunc only for testing
-func TestFunc(c *gin.Context) {
+type Student struct {
+	Name         string  `json:"name"`
+	Age          int64   `json:"age"`
+	AverageScore float64 `json:"average_score"`
+}
+
+// TestFuncxx only for testing
+func TestFuncxx(c *gin.Context) {
 	var err error
 	// INSERT
 
@@ -137,4 +146,36 @@ func Te1stFunc(c *gin.Context) {
 		})
 	}
 
+}
+
+// TestFunc test, test
+func TestFunc(c *gin.Context) {
+
+	esclient, err := config.GetESClient()
+
+	if err != nil {
+		fmt.Println("Error initializing : ", err)
+		panic("Client fail ")
+	}
+
+	//creating student object
+	newStudent := Student{
+		Name:         "Gopher doe",
+		Age:          10,
+		AverageScore: 99.9,
+	}
+
+	dataJSON, err := json.Marshal(newStudent)
+	js := string(dataJSON)
+	ind, err := esclient.Index().
+		Index("students").
+		BodyJson(js).
+		Do(config.CTX)
+
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println(ind)
+	fmt.Println("[Elastic][InsertProduct]Insertion Successful")
 }
