@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// Student sadas
 type Student struct {
 	Name         string  `json:"name"`
 	Age          int64   `json:"age"`
@@ -160,15 +161,17 @@ func TestFunc(c *gin.Context) {
 
 	//creating student object
 	newStudent := Student{
-		Name:         "Gopher doe",
-		Age:          10,
-		AverageScore: 99.9,
+		Name:         "Alvin Khair Arthas",
+		Age:          50,
+		AverageScore: 59.9,
 	}
 
 	dataJSON, err := json.Marshal(newStudent)
 	js := string(dataJSON)
 	ind, err := esclient.Index().
-		Index("students").
+		Index("belajar").
+		Type("_doc").
+		// Id("4").
 		BodyJson(js).
 		Do(config.CTX)
 
@@ -178,4 +181,50 @@ func TestFunc(c *gin.Context) {
 
 	fmt.Println(ind)
 	fmt.Println("[Elastic][InsertProduct]Insertion Successful")
+
+	// // Search Index Data
+	// var students []Student
+
+	// searchSource := elastic.NewSearchSource()
+	// // searchSource.Query(elastic.NewMatchQuery("match_all"))
+
+	// /* this block will basically print out the es query */
+	// queryStr, err1 := searchSource.Source()
+	// queryJs, err2 := json.Marshal(queryStr)
+
+	// if err1 != nil || err2 != nil {
+	// 	fmt.Println("[esclient][GetResponse]err during query marshal=", err1, err2)
+	// }
+	// fmt.Println("[esclient]Final ESQuery=\n", string(queryJs))
+	// /* until this block */
+
+	// searchService := esclient.Search().Index("belajar").SearchSource(searchSource)
+
+	// searchResult, err := searchService.Do(config.CTX)
+	// if err != nil {
+	// 	fmt.Println("[ProductsES][GetPIds]Error=", err)
+	// 	return
+	// }
+
+	// for _, hit := range searchResult.Hits.Hits {
+	// 	var student Student
+	// 	err := json.Unmarshal(hit.Source, &student)
+	// 	if err != nil {
+	// 		fmt.Println("[Getting Students][Unmarshal] Err=", err)
+	// 	}
+
+	// 	students = append(students, student)
+	// }
+
+	// if err != nil {
+	// 	fmt.Println("Fetching student fail: ", err)
+	// } else {
+	// 	// for _, s := range students {
+	// 	// 	fmt.Printf("Student found Name: %s, Age: %d, Score: %f \n", s.Name, s.Age, s.AverageScore)
+	// 	// }
+	// 	c.JSON(200, gin.H{
+	// 		"status": "successfuly query elastic search",
+	// 		"data":   students,
+	// 	})
+	// }
 }

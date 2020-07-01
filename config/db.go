@@ -36,7 +36,7 @@ func InitDB() {
 // GetESClient to get elasticsearch client cluster
 func GetESClient() (*elastic.Client, error) {
 
-	client, err := elastic.NewClient(elastic.SetURL("http://localhost:9200"),
+	client, err := elastic.NewClient(elastic.SetURL("http://localhost:9201"),
 		elastic.SetSniff(false),
 		elastic.SetHealthcheck(false))
 
