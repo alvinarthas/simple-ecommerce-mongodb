@@ -12,6 +12,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+/*
+	Just a Test Handler, to try some features
+*/
+
 // Student sadas
 type Student struct {
 	Name         string  `json:"name"`
@@ -117,12 +121,12 @@ func TestFuncxx(c *gin.Context) {
 			"message": err})
 		c.Abort()
 		return
-	} else {
-		c.JSON(200, gin.H{
-			"status": "successfuly register user, please check your email",
-			"data":   users,
-		})
 	}
+
+	c.JSON(200, gin.H{
+		"status": "successfuly register user, please check your email",
+		"data":   users,
+	})
 
 }
 

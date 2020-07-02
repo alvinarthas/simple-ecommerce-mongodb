@@ -70,6 +70,17 @@ func main() {
 			categories.DELETE("/:slug", middleware.IsAdmin(), handlers.DeleteCategory)
 		}
 
+		// Courier CRUD
+		couriers := apiV1.Group("/couriers")
+		{
+			// Initilize Http method for Category Crud
+			couriers.GET("/", handlers.GetAllCouriers)
+			couriers.GET("/:slug", middleware.IsAdmin(), handlers.GetCourier)
+			couriers.POST("/", middleware.IsAdmin(), handlers.CreateCourier)
+			couriers.PUT("/:slug", middleware.IsAdmin(), handlers.UpdateCourier)
+			couriers.DELETE("/:slug", middleware.IsAdmin(), handlers.DeleteCourier)
+		}
+
 		apiV1.GET("/testfunc", handlers.TestFunc)
 	}
 
