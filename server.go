@@ -81,6 +81,9 @@ func main() {
 			couriers.DELETE("/:slug", middleware.IsAdmin(), handlers.DeleteCourier)
 		}
 
+		apiV1.GET("/search", handlers.ProductSearch)
+
+		// Personal Testing bug and experiment
 		apiV1.GET("/testfunc", handlers.TestFunc)
 	}
 

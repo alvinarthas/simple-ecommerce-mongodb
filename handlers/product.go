@@ -298,3 +298,42 @@ func DeleteProduct(c *gin.Context) {
 		"message": "Delete Product Success",
 	})
 }
+
+// ProductSearch
+func ProductSearch(c *gin.Context) {
+	// Initialization
+	collection := config.DB.Collection("products")
+	var product models.Product
+
+	// Get Parameter
+	keyword := c.Query("keyword")
+	store := c.Query("store")
+	rate := c.Query("rate")
+	// minPrice := c.Query("minPrice")
+	// maxPrice := c.Query("maxPrice")
+	condition := c.Query("condition")
+	category := c.Query("category")
+
+	filter := bson.M{
+		"name":       keyword,
+		"store":      store,
+		"rate.value": rate,
+		"condition":  condition,
+		"category":   category,
+	}
+
+	err = collection.FindOne(config.CTX, filter).Decode(&product)
+
+	if err != nil {
+		c.JSON(404, gin.H{
+			"status":  "error",
+			"message": "record not found"})
+		c.Abort()
+		return
+	}
+
+	c.JSON(200, gin.H{
+		"status": "success",
+		"data":   product,
+	})
+}
