@@ -299,30 +299,36 @@ func DeleteProduct(c *gin.Context) {
 	})
 }
 
-// ProductSearch
+// ProductSearch with parameter
 func ProductSearch(c *gin.Context) {
 	// Initialization
 	collection := config.DB.Collection("products")
-	var product models.Product
+	var results []*models.Product
+
+	findOptions := options.Find()
 
 	// Get Parameter
 	keyword := c.Query("keyword")
-	store := c.Query("store")
+	// store := c.Query("store")
 	rate := c.Query("rate")
-	// minPrice := c.Query("minPrice")
-	// maxPrice := c.Query("maxPrice")
+	minPrice := c.Query("minPrice")
+	maxPrice := c.Query("maxPrice")
 	condition := c.Query("condition")
 	category := c.Query("category")
 
 	filter := bson.M{
-		"name":       keyword,
-		"store":      store,
+		"name": keyword,
+		// "store":      store,
 		"rate.value": rate,
 		"condition":  condition,
 		"category":   category,
+		"price": bson.M{
+			"$gte": minPrice,
+			"$lte": maxPrice,
+		},
 	}
 
-	err = collection.FindOne(config.CTX, filter).Decode(&product)
+	cur, err := collection.Find(config.CTX, filter, findOptions)
 
 	if err != nil {
 		c.JSON(404, gin.H{
@@ -332,8 +338,25 @@ func ProductSearch(c *gin.Context) {
 		return
 	}
 
+	for cur.Next(config.CTX) {
+		// create a value into which the single document can be decoded
+		var elem models.Product
+		err := cur.Decode(&elem)
+		if err != nil {
+			c.JSON(404, gin.H{
+				"status":  "error",
+				"message": "record not found"})
+			c.Abort()
+			return
+		}
+
+		results = append(results, &elem)
+	}
+
+	// Return JSON
 	c.JSON(200, gin.H{
-		"status": "success",
-		"data":   product,
+		"status":  "success",
+		"message": "Show Products Data",
+		"data":    results,
 	})
 }
