@@ -317,7 +317,9 @@ func ProductSearch(c *gin.Context) {
 	category := c.Query("category")
 
 	filter := bson.M{
+		// Searching
 		"name": keyword,
+		// Filtering
 		// "store":      store,
 		"rate.value": rate,
 		"condition":  condition,
