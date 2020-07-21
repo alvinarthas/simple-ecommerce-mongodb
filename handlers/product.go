@@ -311,19 +311,19 @@ func ProductSearch(c *gin.Context) {
 	// Get Parameter
 	keyword := c.Query("keyword")
 	// rate := c.Query("rate")
-	minPrice := c.Query("minPrice")
-	maxPrice := c.Query("maxPrice")
-	condition := c.Query("condition")
+	minPrice, _ := strconv.Atoi(c.Query("minPrice"))
+	maxPrice, _ := strconv.Atoi(c.Query("maxPrice"))
+	condition, _ := strconv.Atoi(c.Query("condition"))
 	category := c.Query("category")
 	// sort := c.Query("sort")
 
 	filter := bson.M{
 		"$or": []interface{}{
-			bson.M{"name": bson.RegEx{ // ^ is start with, $ is end with
+			bson.M{"name": primitive.Regex{ // ^ is start with, $ is end with
 				Pattern: keyword,
 				Options: "i",
 			}},
-			bson.M{"store": bson.RegEx{
+			bson.M{"store": primitive.Regex{
 				Pattern: keyword,
 				Options: "i",
 			}},
@@ -332,14 +332,13 @@ func ProductSearch(c *gin.Context) {
 			"$gte": minPrice,
 			"$lte": maxPrice,
 		},
-		"category":  category,
 		"condition": condition,
+		"category":  category,
 	}
 
-	findOptions.SetSort(bson.D{{"name", -1}})
+	// findOptions.SetSort(bson.D{{"name", -1}})
 
 	cur, err := collection.Find(config.CTX, filter, findOptions)
-
 	if err != nil {
 		c.JSON(404, gin.H{
 			"status":  "error",
