@@ -20,4 +20,5 @@ type Product struct {
 	InitialStock int                `bson:"initial_stock" json:"initial_stock"`
 	Weight       int                `bson:"weight" json:"weight"`
 	Category     string             `bson:"category" json:"category"`
+	Store        string             `bson:"store" json:"store"`
 }

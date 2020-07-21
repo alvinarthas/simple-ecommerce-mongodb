@@ -217,11 +217,12 @@ func getOrRegisterUser(provider string, user *structs.User) models.User {
 func createToken(user *models.User) string {
 	// to send time expire, issue at (iat)
 	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"user_id":    user.ID,
-		"user_role":  user.Role,
-		"user_store": user.HaveStore,
-		"exp":        time.Now().AddDate(0, 0, 1).Unix(), // expired after one day
-		"iat":        time.Now().Unix(),                  // date created
+		"user_id":        user.ID,
+		"user_role":      user.Role,
+		"user_store":     user.HaveStore,
+		"store_username": user.Store.UserName,
+		"exp":            time.Now().AddDate(0, 0, 1).Unix(), // expired after one day
+		"iat":            time.Now().Unix(),                  // date created
 	})
 
 	// Sign and get the complete encoded token as a string using the secret

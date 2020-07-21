@@ -115,6 +115,7 @@ func CreateProduct(c *gin.Context) {
 		InitialStock: stock,
 		Weight:       weight,
 		Category:     c.PostForm("category"),
+		Store:        c.MustGet("jwt_user_id").(string),
 	}
 
 	insertResult, _ := collection.InsertOne(config.CTX, item)
@@ -309,26 +310,33 @@ func ProductSearch(c *gin.Context) {
 
 	// Get Parameter
 	keyword := c.Query("keyword")
-	// store := c.Query("store")
-	rate := c.Query("rate")
+	// rate := c.Query("rate")
 	minPrice := c.Query("minPrice")
 	maxPrice := c.Query("maxPrice")
 	condition := c.Query("condition")
 	category := c.Query("category")
+	// sort := c.Query("sort")
 
 	filter := bson.M{
-		// Searching
-		"name": keyword,
-		// Filtering
-		// "store":      store,
-		"rate.value": rate,
-		"condition":  condition,
-		"category":   category,
+		"$or": []interface{}{
+			bson.M{"name": bson.RegEx{ // ^ is start with, $ is end with
+				Pattern: keyword,
+				Options: "i",
+			}},
+			bson.M{"store": bson.RegEx{
+				Pattern: keyword,
+				Options: "i",
+			}},
+		},
 		"price": bson.M{
 			"$gte": minPrice,
 			"$lte": maxPrice,
 		},
+		"category":  category,
+		"condition": condition,
 	}
+
+	findOptions.SetSort(bson.D{{"name", -1}})
 
 	cur, err := collection.Find(config.CTX, filter, findOptions)
 
