@@ -300,25 +300,25 @@ func DeleteProduct(c *gin.Context) {
 	})
 }
 
-// ProductSearch with parameter
+// ProductSearch with parameter can do dinamically based on the including query param
 func ProductSearch(c *gin.Context) {
 	// Initialization
 	collection := config.DB.Collection("products")
 	var results []*models.Product
-
+	filter := bson.M{}
 	findOptions := options.Find()
 
 	// Get Parameter
 	keyword := c.Query("keyword")
-	// rate := c.Query("rate")
 	minPrice, _ := strconv.Atoi(c.Query("minPrice"))
 	maxPrice, _ := strconv.Atoi(c.Query("maxPrice"))
 	condition, _ := strconv.Atoi(c.Query("condition"))
 	category := c.Query("category")
 	// sort := c.Query("sort")
 
-	filter := bson.M{
-		"$or": []interface{}{
+	// IF There is keyword
+	if len(keyword) > 0 {
+		filter["$or"] = []interface{}{
 			bson.M{"name": primitive.Regex{ // ^ is start with, $ is end with
 				Pattern: keyword,
 				Options: "i",
@@ -327,13 +327,33 @@ func ProductSearch(c *gin.Context) {
 				Pattern: keyword,
 				Options: "i",
 			}},
-		},
-		"price": bson.M{
+		}
+	}
+
+	// Include Price Filters
+	if len(c.Query("minPrice")) > 0 && len(c.Query("maxPrice")) > 0 {
+		filter["price"] = bson.M{
 			"$gte": minPrice,
 			"$lte": maxPrice,
-		},
-		"condition": condition,
-		"category":  category,
+		}
+	} else if len(c.Query("minPrice")) > 0 {
+		filter["price"] = bson.M{
+			"$lte": maxPrice,
+		}
+	} else if len(c.Query("maxPrice")) > 0 {
+		filter["price"] = bson.M{
+			"$gte": minPrice,
+		}
+	}
+
+	// Include Condition Filter
+	if len(c.Query("condition")) > 0 {
+		filter["condition"] = condition
+	}
+
+	// Include Category Filter
+	if len(category) > 0 {
+		filter["category"] = category
 	}
 
 	// findOptions.SetSort(bson.D{{"name", -1}})
