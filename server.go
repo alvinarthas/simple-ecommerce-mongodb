@@ -73,12 +73,23 @@ func main() {
 		// Courier CRUD
 		couriers := apiV1.Group("/couriers")
 		{
-			// Initilize Http method for Category Crud
+			// Initilize Http method for Courier Crud
 			couriers.GET("/", handlers.GetAllCouriers)
 			couriers.GET("/:slug", middleware.IsAdmin(), handlers.GetCourier)
 			couriers.POST("/", middleware.IsAdmin(), handlers.CreateCourier)
 			couriers.PUT("/:slug", middleware.IsAdmin(), handlers.UpdateCourier)
 			couriers.DELETE("/:slug", middleware.IsAdmin(), handlers.DeleteCourier)
+		}
+
+		// Courier Account
+		accounts := apiV1.Group("/accounts")
+		{
+			// Initilize Http method for E-Commerce Account Crud
+			accounts.GET("/", handlers.GetAllAccounts)
+			accounts.GET("/:slug", middleware.IsAdmin(), handlers.GetAccount)
+			accounts.POST("/", middleware.IsAdmin(), handlers.CreateAccount)
+			accounts.PUT("/:slug", middleware.IsAdmin(), handlers.UpdateAccount)
+			accounts.DELETE("/:slug", middleware.IsAdmin(), handlers.DeleteAccount)
 		}
 
 		apiV1.GET("/search", handlers.ProductSearch)
