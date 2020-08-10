@@ -33,6 +33,15 @@ func main() {
 
 			// Verification Users
 			users.PATCH("/verify/:token", handlers.VerifyUserAccount)
+
+			// User Carts
+			carts := apiV1.Group("/carts")
+			{
+				carts.GET("/", handlers.GetAllCarts) // every product in every store
+				carts.POST("/", middleware.HaveStore(), handlers.AddCarts)
+				carts.PUT("/:slug", middleware.HaveStore(), handlers.EditCart)
+				carts.DELETE("/:slug", middleware.HaveStore(), handlers.DeleteCart)
+			}
 		}
 		// Store
 		stores := apiV1.Group("/stores")

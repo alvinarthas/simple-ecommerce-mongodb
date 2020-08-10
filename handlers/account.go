@@ -137,7 +137,7 @@ func UpdateAccount(c *gin.Context) {
 		"slug": getSlug,
 	}
 
-	err = collection.FindOne(config.CTX, filter).Decode(&courier)
+	err = collection.FindOne(config.CTX, filter).Decode(&account)
 
 	if err != nil {
 		c.JSON(404, gin.H{
@@ -165,7 +165,7 @@ func UpdateAccount(c *gin.Context) {
 
 	}
 
-	selector := bson.M{"_id": courier.ID}
+	selector := bson.M{"_id": account.ID}
 	updateStatement := bson.M{"$set": bson.M{
 		"name":        c.PostForm("name"),
 		"description": c.PostForm("description"),
@@ -216,7 +216,7 @@ func DeleteAccount(c *gin.Context) {
 		return
 	}
 
-	selector := bson.M{"_id": courier.ID}
+	selector := bson.M{"_id": account.ID}
 
 	_, err = collection.DeleteOne(context.TODO(), selector)
 

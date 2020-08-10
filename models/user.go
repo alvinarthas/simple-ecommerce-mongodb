@@ -25,4 +25,5 @@ type User struct {
 	CreatedDate       time.Time           `json:"createdDate"`
 	LastUpdate        primitive.Timestamp `json:"lastUpdate"`
 	Store             Store
+	Cart              Cart
 }
