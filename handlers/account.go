@@ -46,7 +46,7 @@ func GetAllAccounts(c *gin.Context) {
 	// Return JSON
 	c.JSON(200, gin.H{
 		"status":  "success",
-		"message": "Berhasil menampilkan semua data kategori",
+		"message": "Berhasil menampilkan semua data Bank Account",
 		"data":    results,
 	})
 }
@@ -83,9 +83,9 @@ func GetAccount(c *gin.Context) {
 // CreateAccount is store account data
 func CreateAccount(c *gin.Context) {
 	// Initialization
-	collection := config.DB.Collection("account")
+	collection := config.DB.Collection("accounts")
 	// Get Parameter
-	slug := slug.Make(c.PostForm("name"))
+	slug := slug.Make(c.PostForm("name") + "-" + c.PostForm("account"))
 
 	// Check Slug
 	filterCheck := bson.M{
@@ -105,6 +105,7 @@ func CreateAccount(c *gin.Context) {
 		Slug:        slug,
 		Description: c.PostForm("description"),
 		Avatar:      c.PostForm("avatar"),
+		Account:     c.PostForm("account"),
 	}
 
 	_, err = collection.InsertOne(config.CTX, item)
@@ -127,7 +128,7 @@ func CreateAccount(c *gin.Context) {
 // UpdateAccount is to update account
 func UpdateAccount(c *gin.Context) {
 	// Initialization
-	collection := config.DB.Collection("account")
+	collection := config.DB.Collection("accounts")
 	var account models.Account
 
 	// Get Parameter
@@ -147,9 +148,9 @@ func UpdateAccount(c *gin.Context) {
 		return
 	}
 
-	if c.PostForm("name") != account.Name {
+	if c.PostForm("name") != account.Name || c.PostForm("account") != account.Account {
 		// Make New Slug
-		newSlug := slug.Make(c.PostForm("name"))
+		newSlug := slug.Make(c.PostForm("name") + "-" + c.PostForm("account"))
 		// Check Slug
 		filterCheck := bson.M{
 			"slug": newSlug,
@@ -171,6 +172,7 @@ func UpdateAccount(c *gin.Context) {
 		"description": c.PostForm("description"),
 		"slug":        getSlug,
 		"avatar":      c.PostForm("avatar"),
+		"account":     c.PostForm("account"),
 	}}
 
 	result, err := collection.UpdateOne(
@@ -196,7 +198,7 @@ func UpdateAccount(c *gin.Context) {
 // DeleteAccount is to delete account
 func DeleteAccount(c *gin.Context) {
 	// Initialization
-	collection := config.DB.Collection("account")
+	collection := config.DB.Collection("accounts")
 	var account models.Account
 
 	// Get Parameter

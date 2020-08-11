@@ -74,7 +74,7 @@ func AddCarts(c *gin.Context) {
 		Description: c.PostForm("description"),
 	}
 
-	updateStatement := bson.M{"$set": bson.M{
+	updateStatement := bson.M{"$push": bson.M{
 		"cart": cart,
 	}}
 
